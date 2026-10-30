@@ -49,7 +49,11 @@
   --r-sm:8px; --r-md:12px; --r-lg:16px;
   --ease-out:cubic-bezier(.23,1,.32,1);
   --t-press:140ms; --t-ui:180ms; --t-enter:260ms;
+  --aura:15%;
+  --fx1:var(--red); --fx2:var(--amber);   /* accent pair for the ambient layer; changes with the level */
 }
+html[data-lv="2"]{--fx1:var(--amber);--fx2:var(--blue)}
+html[data-lv="3"]{--fx1:var(--blue);--fx2:var(--green)}
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --bg:#10161C; --surface:#18212A; --surface-2:#212C37; --ink:#E5EBF1; --ink-2:#9BAAB8; --line:#2E3B48; --field-line:#6F7F8E;
@@ -57,6 +61,7 @@
     --blue:#7DB0F0; --bar-bg:#0B1117; --bar-fg:#E5EBF1; --bar-line:#273442; --lcd-bg:#0E1A12; --lcd-fg:#9FE3A2;
     --ring:0 0 0 1px rgba(255,255,255,.09); --ring-hover:0 0 0 1px rgba(255,255,255,.16);
     --pop:0 0 0 1px rgba(255,255,255,.1),0 18px 48px -12px rgba(0,0,0,.65);
+    --aura:28%;
     color-scheme:dark;
   }
 }
@@ -66,6 +71,7 @@
   --blue:#7DB0F0; --bar-bg:#0B1117; --bar-fg:#E5EBF1; --bar-line:#273442; --lcd-bg:#0E1A12; --lcd-fg:#9FE3A2;
   --ring:0 0 0 1px rgba(255,255,255,.09); --ring-hover:0 0 0 1px rgba(255,255,255,.16);
   --pop:0 0 0 1px rgba(255,255,255,.1),0 18px 48px -12px rgba(0,0,0,.65);
+  --aura:28%;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
@@ -94,7 +100,7 @@ button,.chip{-webkit-user-select:none;user-select:none}
 .u-wrap{overflow-wrap:anywhere}
 
 /* ---------- header ---------- */
-.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);box-shadow:0 1px 0 var(--line)}
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--surface) 82%,transparent);-webkit-backdrop-filter:saturate(1.5) blur(14px);backdrop-filter:saturate(1.5) blur(14px);box-shadow:0 1px 0 var(--line)}
 .topbar-in{max-width:1120px;margin:0 auto;display:flex;align-items:center;gap:16px;padding-block:10px;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);flex:0 0 auto;border-radius:var(--r-sm)}
@@ -178,7 +184,7 @@ button,.chip{-webkit-user-select:none;user-select:none}
 /* ---------- home ---------- */
 .hero{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:28px;align-items:center}
 @media (max-width:820px){.hero{grid-template-columns:1fr}}
-.hero h1 span{color:var(--red)}
+.hero h1 span{background:linear-gradient(100deg,var(--red) 0%,color-mix(in srgb,var(--red) 45%,var(--amber)) 50%,var(--red) 100%);background-size:220% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;animation:shimmer 7s linear infinite}
 .facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;box-shadow:var(--ring);border-radius:var(--r-md);background:var(--line);overflow:hidden}
 .facts.four{grid-template-columns:repeat(4,minmax(0,1fr))}
 @media (max-width:720px){.facts.four{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -434,6 +440,50 @@ table.data tr:last-child td{border-bottom:0}
 .sync .led{width:7px;height:7px}
 .foot-note{font-size:.85rem;color:var(--ink-2);border-top:1px solid var(--line);padding-top:18px;max-width:80ch}
 
+/* ---------- ambient layer: decorative only (aria-hidden, no pointer events), paused during exams ---------- */
+.aura{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.aura i{position:absolute;width:62vmax;height:62vmax;border-radius:50%;background:radial-gradient(closest-side,color-mix(in srgb,var(--fx1) var(--aura),transparent),transparent);will-change:transform;animation:drift 28s ease-in-out infinite alternate}
+.aura i:nth-child(1){left:-18vmax;top:-24vmax}
+.aura i:nth-child(2){right:-24vmax;bottom:-28vmax;background:radial-gradient(closest-side,color-mix(in srgb,var(--fx2) var(--aura),transparent),transparent);animation-duration:36s;animation-direction:alternate-reverse}
+.aura i:nth-child(3){left:38%;top:34%;width:42vmax;height:42vmax;background:radial-gradient(closest-side,color-mix(in srgb,var(--blue) calc(var(--aura) * .55),transparent),transparent);animation-duration:44s}
+.aura::after{content:"";position:absolute;inset:auto 0 0 0;height:38vh;background:linear-gradient(to top,color-mix(in srgb,var(--fx1) calc(var(--aura) * .6),transparent),transparent)}
+#fx-bg,#fx-top{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
+#fx-bg{z-index:0}
+#fx-top{z-index:55}
+#view,.site-foot{position:relative;z-index:1}
+body:has(#exam:not([hidden])) .aura{opacity:0}
+.aura{transition:opacity 300ms var(--ease-out)}
+@keyframes drift{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(9vmax,6vmax,0) scale(1.2)}}
+@keyframes shimmer{to{background-position:-220% 0}}
+@keyframes ping{0%{transform:scale(1);opacity:.6}100%{transform:scale(3.4);opacity:0}}
+@keyframes led{0%,12%{opacity:1}13%,100%{opacity:.2}}
+.brand-led{animation:led 2.4s steps(1) infinite}
+
+/* card glow that follows the mouse (fine pointers only; the position comes from script) */
+.card,.panel{position:relative;isolation:isolate}
+.card::before,.panel::before{content:"";position:absolute;inset:0;border-radius:inherit;z-index:-1;pointer-events:none;opacity:0;
+  background:radial-gradient(300px circle at var(--mx,50%) var(--my,0%),color-mix(in srgb,var(--fx1) 14%,transparent),transparent 70%);transition:opacity 240ms var(--ease-out)}
+@media (hover:hover) and (pointer:fine){.card:hover::before,.panel:hover::before{opacity:1}}
+.btn.primary{position:relative;overflow:hidden}
+.btn.primary::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.38) 50%,transparent 65%);transform:translateX(-130%)}
+@media (hover:hover) and (pointer:fine){.btn.primary:hover:not([disabled])::after{transform:translateX(130%);transition:transform 700ms var(--ease-out)}}
+
+/* hero illustration: a ceiling smoke detector that "sounds" */
+.hero-side{display:flex;flex-direction:column;gap:12px;min-width:0}
+.hero-art{display:flex;justify-content:center;height:150px;pointer-events:none}
+.hero-art svg{height:100%;width:auto;overflow:visible}
+@media (max-width:820px){.hero-art{display:none}}
+.hero-art .ping{fill:none;stroke:var(--fx1);stroke-width:2;opacity:0;transform-box:fill-box;transform-origin:center;animation:ping 3.2s var(--ease-out) infinite}
+.hero-art .ping:nth-of-type(2){animation-delay:1.05s}
+.hero-art .ping:nth-of-type(3){animation-delay:2.1s}
+.hero-art .d-ring{fill:var(--surface-2);stroke:var(--line);stroke-width:1.5}
+.hero-art .d-body{fill:var(--surface);stroke:var(--ink-2);stroke-width:2}
+.hero-art .d-vent{fill:none;stroke:var(--ink-2);stroke-width:2;stroke-linecap:round;stroke-dasharray:3 7;opacity:.7}
+.hero-art .d-led{fill:var(--fx1);filter:drop-shadow(0 0 7px var(--fx1));animation:led 2.4s steps(1) infinite}
+.hero-art .d-tick{fill:none;stroke:var(--fx2);stroke-width:2;stroke-linecap:round;opacity:.8}
+.dial .fgc.pass{filter:drop-shadow(0 0 6px color-mix(in srgb,var(--green) 65%,transparent))}
+.dial .fgc.fail{filter:drop-shadow(0 0 6px color-mix(in srgb,var(--red) 55%,transparent))}
+
 /* ---------- motion: one-shot enter sequence on navigation only (never on keyboard-driven exam steps) ---------- */
 @keyframes rise{from{opacity:0;transform:translateY(10px)}}
 @keyframes fade{from{opacity:0}}
@@ -457,10 +507,13 @@ table.data tr:last-child td{border-bottom:0}
 </style>
 
 <a class="skip" href="#view" data-skip>Skip to content</a>
+<div class="aura" aria-hidden="true"><i></i><i></i><i></i></div>
+<canvas id="fx-bg" aria-hidden="true"></canvas>
+<canvas id="fx-top" aria-hidden="true"></canvas>
 <header class="topbar">
   <div class="topbar-in">
     <a class="brand" href="#home" data-go="home" aria-label="NICET FAS Simulator, home">
-      <svg viewBox="0 0 26 34" aria-hidden="true"><rect x="1" y="1" width="24" height="32" rx="3" fill="var(--red)"/><rect x="5" y="6" width="16" height="7" rx="1" fill="#fff"/><rect x="9" y="17" width="8" height="12" rx="1.5" fill="#fff" opacity=".9"/><rect x="11" y="19" width="4" height="6" fill="var(--red)"/></svg>
+      <svg viewBox="0 0 26 34" aria-hidden="true"><rect x="1" y="1" width="24" height="32" rx="3" fill="var(--red)"/><rect x="5" y="6" width="16" height="7" rx="1" fill="#fff"/><rect x="9" y="17" width="8" height="12" rx="1.5" fill="#fff" opacity=".9"/><rect class="brand-led" x="11" y="19" width="4" height="6" fill="var(--red)"/></svg>
       <span><b>NICET FAS</b><small id="brand-sub">Fire Alarm Systems · Level I</small></span>
     </a>
     <div class="lvl" role="group" aria-label="Certification level">
@@ -482,6 +535,7 @@ table.data tr:last-child td{border-bottom:0}
   <div class="site-foot-in">
     <p>Original questions for self-study. Not affiliated with or endorsed by NICET or NFPA.</p>
     <div class="row" style="gap:4px">
+      <button type="button" class="btn ghost sm" data-act="fx-toggle" aria-label="Visual effects" aria-pressed="true">Effects: on</button>
       <button type="button" class="btn ghost sm" data-act="data-open">Back up &amp; restore</button>
       <button type="button" class="btn ghost sm" data-act="reset-open">Reset progress</button>
     </div>
@@ -887,6 +941,7 @@ function refreshInert() {
   ['.skip', '.topbar', '#view', '.site-foot'].forEach(function (s) { const el = $(s); if (el) el.inert = blocked; });
   const ex = $('#exam'); if (ex) ex.inert = !!modalEl;
   const c = $('#calc'); if (c) c.inert = !!modalEl;
+  FX.sync();   // embers pause while the exam frame is open
 }
 function curQ(ex) { return QMAP[ex.qids[ex.cur]]; }
 function updateTimer() {
@@ -1047,7 +1102,9 @@ function examAction(act) {
     case 'flag': ex.flags[q.id] = !ex.flags[q.id]; if (!ex.flags[q.id]) delete ex.flags[q.id]; Store.save(); renderExam(); break;
     case 'check':
       if (!answered(q, ex.ans[q.id])) return;
-      ex.checked[q.id] = true; record(q, isCorrect(q, ex.ans[q.id])); Store.save(); renderExam('fb'); break;
+      ex.checked[q.id] = true; record(q, isCorrect(q, ex.ans[q.id])); Store.save(); renderExam('fb');
+      if (isCorrect(q, ex.ans[q.id])) { const m = $('#exam .opt.ok .mark'); if (m) { const r = m.getBoundingClientRect(); FX.burst(r.left + r.width / 2, r.top + r.height / 2, { n: 16, cols: ['green', 'amber'], speed: 210 }); } }
+      break;
     case 'calc': toggleCalc(); break;
     case 'ref': openReference(); break;
     case 'end': endPrompt(); break;
@@ -1224,6 +1281,170 @@ function openReference() {
 }
 
 /* =========================================================
+   Ambient effects: embers drifting in the background, sparks and confetti on top.
+   Purely decorative: off while an exam is open, in a hidden tab, with "reduce motion" (a still frame is drawn instead)
+   and when the visitor switches them off in the footer. Colors come from the page's own tokens, so light, dark and each level just work.
+   ========================================================= */
+const FX = (function () {
+  const bg = document.getElementById('fx-bg'), top = document.getElementById('fx-top');
+  if (!bg || !top || !bg.getContext) return { sync: function () {}, palette: function () {}, pointer: function () {}, leave: function () {}, burst: function () {}, confetti: function () {}, rise: function () {}, toggle: function () { return false; }, reduced: function () { return true; } };
+  const KEY = 'nicet-fas-fx', cb = bg.getContext('2d'), ct = top.getContext('2d');
+  const motion = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
+  let pref = null; try { pref = localStorage.getItem(KEY); } catch (e) { /* default */ }
+  const saver = !!(navigator.connection && navigator.connection.saveData);
+  let on = pref ? pref !== 'off' : !saver;
+  let W = 0, H = 0, dpr = 1, raf = 0, last = 0, mx = -999, my = -999, dark = false, slow = 0, shown = false;
+  let embers = [], bits = [], ripples = [], nextR = 0, pal = { a: [200, 40, 50], b: [220, 150, 40], red: [200, 40, 50], amber: [220, 150, 40], green: [40, 160, 100], blue: [60, 120, 200] };
+  const sprites = {};
+  function rgb(h) {
+    h = String(h || '').trim();
+    if (h.charAt(0) === '#') { if (h.length === 4) h = '#' + h.charAt(1) + h.charAt(1) + h.charAt(2) + h.charAt(2) + h.charAt(3) + h.charAt(3); const n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+    const m = h.match(/[\d.]+/g); return m && m.length >= 3 ? m.slice(0, 3).map(Number) : null;
+  }
+  function sprite(c) {   // a soft glowing dot, drawn once per color and stamped many times
+    const k = c.join(); if (sprites[k]) return sprites[k];
+    const s = document.createElement('canvas'); s.width = s.height = 64;
+    const x = s.getContext('2d'), g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+    g.addColorStop(0, 'rgba(' + k + ',1)'); g.addColorStop(.28, 'rgba(' + k + ',.5)'); g.addColorStop(1, 'rgba(' + k + ',0)');
+    x.fillStyle = g; x.fillRect(0, 0, 64, 64);
+    return (sprites[k] = s);
+  }
+  function palette() {
+    const cs = getComputedStyle(document.documentElement), g = function (n, d) { return rgb(cs.getPropertyValue(n)) || d; };
+    pal = { a: g('--fx1', pal.a), b: g('--fx2', pal.b), red: g('--red', pal.red), amber: g('--amber', pal.amber), green: g('--green', pal.green), blue: g('--blue', pal.blue) };
+    const bgc = g('--bg', [237, 240, 243]); dark = (bgc[0] * .299 + bgc[1] * .587 + bgc[2] * .114) < 110;
+    if (!raf) sync();
+  }
+  function ember(init) {
+    const z = Math.random();
+    return { x: Math.random() * W, y: init ? Math.random() * H : H + 24, z: z, r: 1.1 + z * 2.4, vy: 9 + z * 24, sway: 8 + Math.random() * 18, f: .35 + Math.random() * .8, p: Math.random() * 6.283, c: Math.random() < .6 ? 'a' : 'b', ox: 0, oy: 0, tw: Math.random() * 6.283 };
+  }
+  function resize() {
+    const w = window.innerWidth, h = window.innerHeight;
+    if (w === W && Math.abs(h - H) < 120) return;   // the mobile address bar changes the height while scrolling: ignore small changes
+    dpr = Math.min(2, window.devicePixelRatio || 1); W = w; H = h;
+    [bg, top].forEach(function (c) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); });
+    cb.setTransform(dpr, 0, 0, dpr, 0, 0); ct.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const n = Math.max(20, Math.min(72, Math.round(W * H / (W < 600 ? 26000 : 16000)))) * (slow > 2 ? .6 : 1);
+    while (embers.length < n) embers.push(ember(true));
+    embers.length = Math.min(embers.length, Math.round(n));
+    sync();
+  }
+  const live = function () { return on && !motion.matches; };
+  const ambient = function () { return on && !document.hidden && !examOpen(); };
+  function drawAmbient(t, dt) {
+    cb.clearRect(0, 0, W, H);
+    cb.globalCompositeOperation = dark ? 'lighter' : 'source-over';
+    const decay = dt ? Math.pow(.15, dt) : 1;
+    for (let i = 0; i < embers.length; i++) {
+      let e = embers[i];
+      if (dt) {
+        e.y -= e.vy * dt; e.p += e.f * dt; e.ox *= decay; e.oy *= decay;
+        if (e.y < -30) { embers[i] = e = ember(false); }
+      }
+      const x = e.x + Math.sin(e.p) * e.sway + e.ox, y = e.y + e.oy;
+      if (dt) {   // the cursor gently pushes embers away
+        const dx = x - mx, dy = y - my, d2 = dx * dx + dy * dy;
+        if (d2 < 16900) { const d = Math.sqrt(d2) || 1, f = (130 - d) * dt * 2.6; e.ox += dx / d * f; e.oy += dy / d * f; }
+      }
+      const edge = Math.min(1, y / (H * .2), (H - y) / (H * .08));
+      if (edge <= 0) continue;
+      const col = e.c === 'a' ? pal.a : pal.b, s = e.r * 6.4;
+      const a = (dark ? .26 + e.z * .55 : .32 + e.z * .5) * (.72 + .28 * Math.sin(t * 1.6 + e.tw)) * edge;
+      cb.globalAlpha = a; cb.drawImage(sprite(col), x - s, y - s, s * 2, s * 2);
+      cb.globalAlpha = Math.min(1, a * 1.6); cb.fillStyle = 'rgb(' + col.join() + ')';
+      cb.beginPath(); cb.arc(x, y, e.r * .55, 0, 6.283); cb.fill();
+    }
+    if (dt) {   // alarm-style ripples: a ring now and then spreads out from a random spot and fades
+      if (t > nextR && ripples.length < 4) { nextR = t + 1.6 + Math.random() * 2.2; ripples.push({ x: W * (.08 + Math.random() * .84), y: H * (.1 + Math.random() * .75), age: 0, life: 3.4, max: 60 + Math.random() * 90, c: Math.random() < .6 ? pal.a : pal.b }); }
+      cb.lineWidth = 1.6;
+      for (let i = ripples.length - 1; i >= 0; i--) {
+        const r = ripples[i]; r.age += dt; const u = r.age / r.life;
+        if (u >= 1) { ripples.splice(i, 1); continue; }
+        cb.globalAlpha = (1 - u) * (dark ? .34 : .3); cb.strokeStyle = 'rgb(' + r.c.join() + ')';
+        cb.beginPath(); cb.arc(r.x, r.y, r.max * (1 - Math.pow(1 - u, 3)), 0, 6.283); cb.stroke();
+      }
+    }
+    cb.globalAlpha = 1; cb.globalCompositeOperation = 'source-over';
+  }
+  function drawBits(dt) {
+    ct.clearRect(0, 0, W, H);
+    for (let i = bits.length - 1; i >= 0; i--) {
+      const b = bits[i]; b.age += dt;
+      if (b.age >= b.life) { bits.splice(i, 1); continue; }
+      const k = Math.exp(-b.drag * dt); b.vx *= k; b.vy = b.vy * k + b.g * dt; b.x += b.vx * dt; b.y += b.vy * dt;
+      const u = b.age / b.life, a = u < .65 ? 1 : 1 - (u - .65) / .35;
+      ct.globalAlpha = a;
+      if (b.kind === 'rect') {   // confetti: spins and flutters
+        b.rot += b.vr * dt;
+        ct.save(); ct.translate(b.x, b.y); ct.rotate(b.rot); ct.scale(1, Math.cos(b.age * b.fr));
+        ct.fillStyle = 'rgb(' + b.col.join() + ')'; ct.fillRect(-b.size, -b.size * .45, b.size * 2, b.size * .9); ct.restore();
+      } else {                   // spark: additive glow
+        ct.globalCompositeOperation = 'lighter'; const s = b.size * (1 - u * .5) * 3;
+        ct.drawImage(sprite(b.col), b.x - s, b.y - s, s * 2, s * 2); ct.globalCompositeOperation = 'source-over';
+      }
+    }
+    ct.globalAlpha = 1;
+  }
+  function frame(ts) {
+    raf = 0;
+    const raw = (ts - last) / 1000 || .016; last = ts;
+    const dt = Math.min(.05, raw);
+    slow = raw > .034 ? slow + 1 : Math.max(0, slow - 1);
+    if (slow > 40 && embers.length > 14) { embers.length = Math.round(embers.length * .6); slow = 0; }   // struggling device: thin the field
+    const amb = ambient() && live();
+    if (amb) drawAmbient(ts / 1000, dt); else if (shown) { cb.clearRect(0, 0, W, H); shown = false; }
+    if (amb) shown = true;
+    drawBits(dt);
+    if (amb || bits.length) raf = requestAnimationFrame(frame);
+  }
+  function kick() { if (!raf) { last = performance.now(); raf = requestAnimationFrame(frame); } }
+  function sync() {   // call whenever the conditions change
+    const btn = document.querySelector('[data-act="fx-toggle"]');
+    if (btn) { btn.textContent = 'Effects: ' + (on ? 'on' : 'off'); btn.setAttribute('aria-pressed', String(on)); }
+    if (!W) return;
+    if (ambient() && live()) kick();
+    else if (ambient() && on) { drawAmbient(0, 0); shown = true; }   // reduced motion: one still frame
+    else if (!raf) { cb.clearRect(0, 0, W, H); shown = false; }
+  }
+  function burst(x, y, o) {
+    if (!live()) return; o = o || {};
+    const n = o.n || 14, cols = o.cols || ['green', 'amber'];
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * 6.283, s = (o.speed || 180) * (.35 + Math.random() * .65);
+      bits.push({ x: x, y: y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 40, g: 280, drag: 2.4, life: .45 + Math.random() * .5, age: 0, size: 2 + Math.random() * 3, col: pal[cols[i % cols.length]], kind: 'dot' });
+    }
+    kick();
+  }
+  function confetti(x, y) {
+    if (!live()) return; const cols = ['red', 'amber', 'green', 'blue'];
+    for (let i = 0; i < 90; i++) {
+      const a = -Math.PI / 2 + (Math.random() - .5) * 1.9, s = 380 + Math.random() * 540;
+      bits.push({ x: x, y: y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, g: 760, drag: 1.7, life: 2.1 + Math.random() * 1.2, age: 0, size: 4 + Math.random() * 4, rot: Math.random() * 6.283, vr: (Math.random() - .5) * 14, fr: 6 + Math.random() * 8, col: pal[cols[i % 4]], kind: 'rect' });
+    }
+    kick();
+  }
+  function rise() {   // a wave of embers across the whole screen: the fresh start after a reset
+    if (!live()) return;
+    for (let i = 0; i < 80; i++) bits.push({ x: Math.random() * W, y: H + 10, vx: (Math.random() - .5) * 60, vy: -(260 + Math.random() * 420), g: 220, drag: .9, life: 1.3 + Math.random() * 1, age: 0, size: 2 + Math.random() * 3.5, col: Math.random() < .5 ? pal.a : pal.b, kind: 'dot' });
+    kick();
+  }
+  function toggle() {
+    on = !on; try { localStorage.setItem(KEY, on ? 'on' : 'off'); } catch (e) { /* not saved */ }
+    if (!on) bits.length = 0;
+    resizeForce(); sync(); return on;
+  }
+  function resizeForce() { W = 0; resize(); }
+  let rt = null;
+  window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(resize, 160); });
+  document.addEventListener('visibilitychange', sync);
+  if (motion.addEventListener) motion.addEventListener('change', sync);
+  if (window.matchMedia) { const mq = window.matchMedia('(prefers-color-scheme: dark)'); if (mq.addEventListener) mq.addEventListener('change', palette); }
+  palette(); resize();
+  return { sync: sync, palette: palette, pointer: function (x, y) { mx = x; my = y; }, leave: function () { mx = my = -999; }, burst: burst, confetti: confetti, rise: rise, toggle: toggle, reduced: function () { return motion.matches; } };
+})();
+
+/* =========================================================
    Your data: reset, back up, restore
    ========================================================= */
 function seenCount(level) { return Object.keys(Store.data.stats).filter(function (k) { const q = QMAP[k]; return !level || (q && qLevel(q) === level); }).length; }
@@ -1263,6 +1484,7 @@ function resetProgress(scope) {
   render();
   try { view.focus({ preventScroll: true }); } catch (e) { /* ignore */ }
   toast(label + ' deleted. You are starting from zero.');
+  FX.rise();
 }
 function openDataDialog() {
   modal({
@@ -1367,6 +1589,7 @@ function applyLevel(l, persist) {
   Store.data.settings.level = l;
   if (persist) Store.save();
   $$('[data-level]').forEach(function (b) { b.setAttribute('aria-pressed', String(+b.dataset.level === l)); });
+  document.documentElement.setAttribute('data-lv', String(l)); FX.palette();   // each level has its own accent pair for the ambient layer
   const sub = $('#brand-sub'); if (sub) sub.textContent = 'Fire Alarm Systems · Level ' + LV.roman;
   if (changed) { ui.explore = { q: '', topic: 'all', limit: 25, open: {} }; ui.bankFilters = { diff: 'all', freq: false, unseen: false, wrong: false, type: 'all' }; ui.glossQ = ''; }
   return changed;
@@ -1375,10 +1598,25 @@ function applyLevel(l, persist) {
 let enterTimer = null;
 function startEnter() {
   clearTimeout(enterTimer); view.classList.remove('enter');
-  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (FX.reduced()) return;
   void view.offsetWidth; view.classList.add('enter');
   enterTimer = setTimeout(function () { view.classList.remove('enter'); }, 1100);
+  countUp();
 }
+function countUp() {   // numbers with data-count climb from 0 to their value
+  $$('[data-count]', view).forEach(function (el) {
+    const to = +el.dataset.count, suf = el.dataset.suffix || '';
+    if (!isFinite(to) || to <= 0) return;
+    const t0 = performance.now(), dur = 850;
+    function step(now) {
+      const k = Math.min(1, (now - t0) / dur);
+      el.textContent = (k < 1 ? Math.round(to * (1 - Math.pow(1 - k, 3))) : to) + suf;
+      if (k < 1 && el.isConnected) requestAnimationFrame(step);
+    }
+    el.textContent = '0' + suf; requestAnimationFrame(step);
+  });
+}
+function cnt(n, suffix) { return '<b data-count="' + n + '"' + (suffix ? ' data-suffix="' + suffix + '"' : '') + '>' + n + (suffix || '') + '</b>'; }
 function announceView() { const h = $('h1', view) || $('h2', view); announce(h ? h.textContent : ''); }
 function go(v, param, keepScroll) {
   if (!VIEWS[v]) v = 'home';
@@ -1431,12 +1669,12 @@ function renderHome() {
       '<p class="small muted" style="max-width:62ch">' + esc(LV.role) + '</p>' +
       '<div class="row" style="margin-top:6px"><button class="btn primary" type="button" data-act="start-full">Start a full practice exam</button><button class="btn" type="button" data-go="bank">Practice by chapter</button><button class="btn ghost" type="button" data-go="guides" data-param="' + LV.examGuide + '">About the exam</button></div>' +
     '</div>' +
-    '<div class="facts" aria-label="The exam in numbers">' +
-      '<div><b>' + LV.n + '</b><span>multiple-choice questions</span></div>' +
-      '<div><b>' + LV.min + '</b><span>minutes, no scheduled break</span></div>' +
-      '<div><b>' + ql.length + '</b><span>original questions in this bank</span></div>' +
-      '<div><b>' + LV.books.length + '</b><span>printed references allowed in the test center</span></div>' +
-    '</div></section>' +
+    '<div class="hero-side">' + heroArt() + '<div class="facts" aria-label="The exam in numbers">' +
+      '<div>' + cnt(LV.n) + '<span>multiple-choice questions</span></div>' +
+      '<div>' + cnt(LV.min) + '<span>minutes, no scheduled break</span></div>' +
+      '<div>' + cnt(ql.length) + '<span>original questions in this bank</span></div>' +
+      '<div>' + cnt(LV.books.length) + '<span>printed references allowed in the test center</span></div>' +
+    '</div></div></section>' +
     blueprintPanel() +
     (tot.seen ? '<section class="panel"><div class="section-head" style="margin-bottom:12px"><h3>Your progress · Level ' + LV.roman + '</h3><span data-sync>' + syncBadge() + '</span></div>' +
       '<div class="stat-bars">' +
@@ -1451,6 +1689,14 @@ function renderHome() {
     '</section>' +
     '<p class="foot-note">Every question on this site is original, written from NICET’s public content outlines and the codes they list. Real NICET items and NICET’s paid practice tests are confidential or copyrighted, so they are not reproduced here. Outline sources: <a href="https://nicet.org/fas" target="_blank" rel="noopener">nicet.org/fas</a> (content outlines and general references for Levels I, II and III). A full exam here has ' + esc(split) + ' questions. Not affiliated with or endorsed by NICET or NFPA.</p>' +
     '</div>';
+}
+function heroArt() {   // a ceiling smoke detector that "sounds": three rings ping outward, the LED blinks
+  return '<div class="hero-art" aria-hidden="true"><svg viewBox="0 0 200 150" focusable="false">' +
+    '<circle class="ping" cx="100" cy="75" r="30"/><circle class="ping" cx="100" cy="75" r="30"/><circle class="ping" cx="100" cy="75" r="30"/>' +
+    '<circle class="d-ring" cx="100" cy="75" r="50"/><circle class="d-body" cx="100" cy="75" r="40"/>' +
+    '<circle class="d-vent" cx="100" cy="75" r="30"/><circle class="d-vent" cx="100" cy="75" r="21"/>' +
+    '<circle class="d-led" cx="100" cy="75" r="6"/>' +
+    '<path class="d-tick" d="M44 75h-14M156 75h14M100 19V5M100 131v14"/></svg></div>';
 }
 function card(title, body, foot) { return '<div class="card"><h3>' + esc(title) + '</h3><p class="muted">' + esc(body) + '</p><div class="foot">' + foot + '</div></div>'; }
 function statBar(label, p, val, neutral) {
@@ -1703,7 +1949,13 @@ function renderResult() {
     drawRegions(svg, q);
     if (att.given && att.given[id]) drawMark(svg, att.given[id]);
   });
+  if (pass && Date.now() - att.date < 30000 && !fxDone[att.id]) {   // confetti once, right after finishing a passing exam (not when revisiting it)
+    fxDone[att.id] = 1;
+    const d = $('.dial', view);
+    if (d) { const r = d.getBoundingClientRect(); setTimeout(function () { FX.confetti(r.left + r.width / 2, r.top + r.height / 2); }, 420); }
+  }
 }
+const fxDone = {};
 
 /* ---------- Progress ---------- */
 function renderProgress() {
@@ -1723,10 +1975,10 @@ function renderProgress() {
   view.innerHTML = '<div class="stack">' +
     '<div class="section-head"><div class="stack-sm"><p class="eyebrow">My progress · Level ' + LV.roman + '</p><h1>How you are doing</h1></div><span data-sync>' + syncBadge() + '</span></div>' +
     '<div class="facts four">' +
-      '<div><b>' + tot.seen + '</b><span>of ' + tot.total + ' questions seen</span></div>' +
-      '<div><b>' + (tot.seen ? tot.acc + '%' : '—') + '</b><span>correct on last attempt</span></div>' +
-      '<div><b>' + atts.length + '</b><span>exams and practice sets finished</span></div>' +
-      '<div><b>' + (best != null ? best + '%' : '—') + '</b><span>best full ' + LV.n + '-question exam</span></div>' +
+      '<div>' + cnt(tot.seen) + '<span>of ' + tot.total + ' questions seen</span></div>' +
+      '<div>' + (tot.seen ? cnt(tot.acc, '%') : '<b>—</b>') + '<span>correct on last attempt</span></div>' +
+      '<div>' + cnt(atts.length) + '<span>exams and practice sets finished</span></div>' +
+      '<div>' + (best != null ? cnt(best, '%') : '<b>—</b>') + '<span>best full ' + LV.n + '-question exam</span></div>' +
     '</div>' +
     '<div class="row"><button class="btn primary" type="button" data-act="smart">Smart review (20)</button><button class="btn" type="button" data-act="wrong-all"' + (nWrong ? '' : ' disabled') + '>Review my misses (' + nWrong + ')</button>' +
       weak.map(function (x) { return '<button class="btn ghost" type="button" data-act="bank-study" data-key="t:' + x.id + '">Strengthen ' + esc(topics[x.id].short || x.id) + ' (' + x.s.acc + '%)</button>'; }).join('') + '</div>' +
@@ -1829,6 +2081,7 @@ function bindGlossary() {
    ========================================================= */
 document.addEventListener('click', function (e) {
   const t = e.target;
+  if (e.detail > 0 && t.closest('.btn.primary:not([disabled])')) FX.burst(e.clientX, e.clientY, { n: 10, cols: ['red', 'amber'], speed: 150 });   // pointer clicks only, never the keyboard
   const k = t.closest('#calc [data-k]'); if (k) { calcPress(k.dataset.k); return; }
   if (t.closest('[data-calc-close]')) { closeCalc(); return; }
   const x = t.closest('#exam [data-x]'); if (x) { if (!x.disabled) examAction(x.dataset.x); return; }
@@ -1868,6 +2121,7 @@ document.addEventListener('click', function (e) {
   else if (act === 'retry-wrong') { const at = Store.data.attempts.find(function (z) { return z.id === a.dataset.id; }); if (at) { applyLevel(attLevel(at), true); startExam(newExam({ kind: 'practice', title: 'Missed in: ' + at.title, qs: at.wrong.map(function (id) { return QMAP[id]; }), mode: 'study' })); } }
   else if (act === 'ex-toggle') { const id = a.dataset.qid; ui.explore.open[id] = !ui.explore.open[id]; drawExplore(); }
   else if (act === 'ex-more') { ui.explore.limit += 25; drawExplore(); }
+  else if (act === 'fx-toggle') toast('Effects ' + (FX.toggle() ? 'on' : 'off'));
   else if (act === 'reset-open') openReset();
   else if (act === 'data-open') openDataDialog();
   else if (act === 'backup') exportBackup();
@@ -1912,6 +2166,20 @@ document.addEventListener('keydown', function (e) {
   else if (e.key === 'ArrowLeft') { e.preventDefault(); examAction('prev'); }
 });
 window.addEventListener('hashchange', function () { parseHash(); if (!examOpen()) render(); });
+/* mouse: embers move away from the cursor and cards glow where it is */
+let spotEv = null, spotRaf = 0;
+document.addEventListener('pointermove', function (e) {
+  if (e.pointerType !== 'mouse') return;
+  FX.pointer(e.clientX, e.clientY);
+  const el = e.target.closest && e.target.closest('.card,.panel');
+  if (!el) return;
+  spotEv = { el: el, x: e.clientX, y: e.clientY };
+  if (!spotRaf) spotRaf = requestAnimationFrame(function () {
+    spotRaf = 0; const r = spotEv.el.getBoundingClientRect();
+    spotEv.el.style.setProperty('--mx', (spotEv.x - r.left) + 'px'); spotEv.el.style.setProperty('--my', (spotEv.y - r.top) + 'px');
+  });
+}, { passive: true });
+document.addEventListener('mouseout', function (e) { if (!e.relatedTarget) FX.leave(); });
 
 /* =========================================================
    Boot
@@ -1920,6 +2188,7 @@ Store.load();
 applyLevel(Store.data.settings.level, false);
 parseHash();
 render();
+startEnter();
 if (Store.data.current && Store.data.current.deadline && Date.now() >= Store.data.current.deadline) { finishExam(true); }
 Store.connect();
 })();
